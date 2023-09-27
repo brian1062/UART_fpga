@@ -1,7 +1,7 @@
 module uart_rx
 #(
 parameter     DBIT =  8,  // # data bit 
-parameter  SB-TICK = 16   // # ticks for stop bits
+parameter  SB_TICK = 16   // # ticks for stop bits
 )
 
 (
@@ -61,7 +61,7 @@ always @(*) begin
         start:
             if (s_tick) 
                 if (s_reg==7) begin
-                    state_next = data;
+                    state_next = data;//state_next = ~rx ? data : idle;
                     s_next     = 0;
                     n_next     = 0;
                 end
@@ -69,11 +69,11 @@ always @(*) begin
                     s_next = s_reg + 1;
         data:
             if (s_tick) 
-                if (s_reg==15) 
+                if (s_reg==15) //(SB_TICK-1)
                 begin
                     s_next = 0;
                     b_next = {rx, b_reg[7:1]};
-                    if (n_reg==(DBIT-1)) 
+                    if (n_reg==(DBIT-1)) //si se usa el bit de paridad 1 vez mas
                         state_next = stop;
                     else 
                         n_next = n_reg + 1;
