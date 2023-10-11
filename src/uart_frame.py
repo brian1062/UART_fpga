@@ -82,15 +82,16 @@ while True:
     #for ptr in range(len(send_v)):
     #    ser.write(send_v[ptr])
     print("Trama enviada:")
-    print(send_v)
+    print(op_val,send_v)
     #     #Rx
-    time.sleep(1)
     
-    # out_op = ''
-    # while ser.inWaiting() > 0:
-    #     readData = ser.read()
-    #     out_op = int.from_bytes(readData,byteorder='big')
-    #     print (">>",out_op)
+    
+    out_op = ''
+    while ser.inWaiting() > 0:
+        readData = ser.read()
+        out_op = int.from_bytes(readData,byteorder='big')
+        print (">>",out_op)
+    time.sleep(1)
 
 
     #out = str(int.from_bytes(readData,byteorder='big'))
