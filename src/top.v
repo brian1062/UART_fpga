@@ -29,72 +29,103 @@ wire       [DBIT-1:0]     w_data;
 
 wire                     tx_full;
 reg                      wr_uart;
-reg                        tx_on;
 reg                    tam_frame;
+//---------------------------------------
 
-
-//ALU
+//-------------ALU------------------------
 reg signed  [DBIT-1  : 0]             a_data;  //! First operand
 reg signed  [DBIT-1  : 0]             b_data;  //! Second operand
 reg signed  [NB_OP-1  : 0]         operation;  //! Operation code
 
-//vio logic  
+//-------------------vio logic-------------------
 wire     [1:0]            sw_vio; //0:VIO/HW , 1:ResetVio
 wire                       reset;
 assign reset = (sw_vio[0]) ? sw_vio[1] : i_reset;
-//--------------------------------------------
+//-----------------------------------------------
 
 reg      [1:0]         rx_status;
 
-always @(posedge clock) begin
+//---------------------States---------------------
+localparam IDLE_STATE  = 2'b00;
+localparam RX_STATE    = 2'b01;
+localparam TX_STATE    = 2'b10;
+reg [1:0] current_state, next_state;
+
+always @(posedge clock or posedge reset) begin: FSM
     if(reset)begin
-        //reg_led <= 8'b00000000;
+        current_state <= IDLE_STATE;
+    end
+    else begin
+        current_state <= next_state;
+    end
+end
+
+
+
+always @(posedge clock) begin
+    if (reset) begin
         rd_uart   <=      1'b0;
         rx_status <=     2'b00;
         wr_uart   <=      1'b0;
-        tx_on     <=      1'b0;
-        tam_frame     <=      1'b0;
+        tam_frame <=      1'b0;
         a_data    <=   { DBIT{1'b0}};
         b_data    <=   { DBIT{1'b0}};
         operation <=   {NB_OP{1'b0}};
     end
-    if((~rx_empty && ~rd_uart)&& (rx_status != 2'b11))begin: Rx_mode
-        if(rx_status==2'b00)begin
-            operation <= r_data[NB_OP-1  : 0];
-        end
-        if(rx_status==2'b01)begin
-            a_data    <= r_data;
-        end
-        if (rx_status==2'b10) begin
-            b_data    <= r_data;
-            tx_on     <=   1'b1;
-        end
-        rx_status <= (rx_status==2'b10) ? 2'b00 : rx_status + 1'b1;
-        //rx_status <= rx_status + 1'b1;
-        rd_uart <= 1'b1;
-    end
     else begin
-        rd_uart <= 1'b0;
+
+        case(current_state)
+            IDLE_STATE: begin
+                    next_state <= RX_STATE;
+                    rx_status  <= 2'b00;
+                    tam_frame  <= 1'b0;
+            end
+            RX_STATE: begin
+                if(~rx_empty && ~rd_uart)begin
+                    if(rx_status==2'b00)begin 
+                        operation <= r_data[NB_OP-1  : 0];
+                    end
+                    if(rx_status==2'b01)begin 
+                        a_data    <= r_data;
+                    end
+                    if (rx_status==2'b10) begin 
+                        b_data    <= r_data;
+                    end
+                    rx_status <= rx_status + 1'b1;
+                    rd_uart <= 1'b1;
+                end
+                else begin
+                    rd_uart <= 1'b0;
+                    if(rx_status==2'b11)begin
+                        next_state <= TX_STATE;
+                    end
+                        
+                end
+                
+            end
+            TX_STATE: begin
+                if(tx_empty && ~tam_frame)begin
+                    wr_uart   <= 1'b1;
+                    tam_frame     <= tam_frame + 1'b1;
+                end
+                else begin
+                    wr_uart <= 1'b0;
+                end
+                if (tx_done_tick) begin
+                    next_state <= IDLE_STATE;
+                end  
+
+            end
+            default: begin
+                next_state = IDLE_STATE;
+            end
+        endcase
+
     end
-
-    if(tx_on && ~rd_uart)begin: Tx_mode
-        //wr_uart   <= 1'b1;
-        if(tx_empty && ~tam_frame)begin
-            wr_uart   <= 1'b1;
-            tam_frame     <= tam_frame + 1'b1;
-        end
-        else begin
-            wr_uart <= 1'b0;
-        end
-        if (tx_done_tick) begin
-            tx_on <= 1'b0;
-            tam_frame <= 1'b0;
-        end  
-    end
-
-
 
 end
+
+
 
 assign w_data = o_led;
 
@@ -111,7 +142,7 @@ baud_rate_gen
     .max_tick(tick   ), 
     .q       (       )  
     );
-
+//----------------RX----------------------
 fifo
 #(
     .B(DBIT     ), //number bits in a word

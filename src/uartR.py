@@ -1,6 +1,7 @@
 import serial
 import time
 import sys
+import signal
 
 portUSB = sys.argv[1]
 
@@ -24,6 +25,14 @@ print(ser.timeout)
 #limpiamos las pilas
 ser.flushInput()
 ser.flushOutput()
+
+# Función para manejar la señal SIGINT (Control+C)
+def handle_sigint(signum, frame):
+    print("Recibida la señal SIGINT (Control+C). Cerrando el puerto serial...")
+    ser.close()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, handle_sigint)
 
 while True:
     

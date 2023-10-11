@@ -86,12 +86,12 @@ while True:
     #     #Rx
     
     
-    out_op = ''
-    while ser.inWaiting() > 0:
-        readData = ser.read()
-        out_op = int.from_bytes(readData,byteorder='big')
-        print (">>",out_op)
-    time.sleep(1)
+    #out_op = ''
+    #while ser.inWaiting() > 0:
+    #    readData = ser.read()
+    #    out_op = int.from_bytes(readData,byteorder='big')
+    #    print (">>",out_op)
+    #time.sleep(1)
 
 
     #out = str(int.from_bytes(readData,byteorder='big'))
