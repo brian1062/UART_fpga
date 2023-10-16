@@ -27,7 +27,7 @@ ser.flushOutput()
 
 while True:
     #char_v = []
-    print(" (type 'exit' to quit) ")
+    print("(type 'exit' to quit) \n")
     print("Seleccione la operacion que desea realizar: ")
     print("1) SUMA=A+B\n2) RESTA=A-B \n3) AND=(A)&(B)")
     print("4) OR=(A)OR(B)\n5) XOR=(A)XOR(B)\n6) NOR=(A)NOR(B)")
@@ -78,11 +78,11 @@ while True:
     ##----------
     ser.write(send_v[1])
     ##------------
-
+    print("")
     #for ptr in range(len(send_v)):
     #    ser.write(send_v[ptr])
-    print("Trama enviada:")
-    print(op_val,send_v)
+    #print("Trama enviada:")
+    #print(op_val,send_v)
     #     #Rx
     
     
